@@ -21,12 +21,12 @@ class Registro{
         string fechaString;
         string hora; 
         string fuente_ip; 
-        // int fuente_puerto; 
-        string fuente_puerto; 
+        int fuente_puerto; 
+        // string fuente_puerto; 
         string fuente_hostname; 
         string destino_ip; 
-        // int destino_puerto; 
-        string destino_puerto; 
+        int destino_puerto; 
+        // string destino_puerto; 
         string destino_hostname; 
         void print();
         void printDate();
@@ -48,10 +48,16 @@ Registro::Registro(
     this->hora = _hora;
     this->fuente_ip = _fuente_ip;
     this->fuente_hostname = _fuente_hostname;
-    this->fuente_puerto = _fuente_puerto;
     this->destino_ip = _destino_ip;
     this->destino_hostname = _destino_hostname;
-    this->destino_puerto = _destino_puerto;
+
+    try{
+        this->fuente_puerto = stoi(_fuente_puerto, nullptr, 10);
+        this->destino_puerto = stoi(_destino_puerto, nullptr, 10);
+    }catch(...){
+        this->fuente_puerto = -1;
+        this->destino_puerto = -1;
+    }
     // TODO: Convertir a ints
 };
 void Registro::print(){
