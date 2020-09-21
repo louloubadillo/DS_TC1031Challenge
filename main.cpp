@@ -28,6 +28,13 @@ int busquedaSecuencial( vector<Registro> d, bool (*condicion)(Registro a, Regist
 int busquedaBinaria(vector<Registro>d, bool (*condicion)(Registro r), int inicio, int final){
     // med
     // declarar variables simultáneas para izquiera y derecha, como en el ejercicio del rascacielos. WIP
+
+    // int med = ...
+    if(final<inicio) return -1;
+    // if( condicion(datos[med]) ) return med;
+    // izq = busquedaBinaria(...), der = busquedaBinaria(...)
+    // return izq || derecha
+
     return 0;
 }
 
@@ -53,16 +60,9 @@ bool perteneceA(Registro r){
 }
 
 string obtenerIPBase(vector<Registro> d){
-    //XXX.XXX.X.XX
-    int i = 0;
-    while (d[0].fuente_ip != "-")
-    {
-        i++;
-    }
+    int i = busquedaSecuencial(d, [](Registro r){ return r.fuente_ip != "-" });
     string ip = d[i+1].fuente_ip;
-    for(int i = 0; i<3; i++){
-        ip.pop_back();
-    }
+    for(int i = 0; i<3; i++) ip.pop_back();
     ip.append(".0");
     return ip;
 }
@@ -92,9 +92,13 @@ int main(void){
     cout<<( perteneceCount==0 ? "No." : "Si." )<<endl<<endl;
 
     //4. ¿Cuál es la dirección de la red interna de la compañía?
-    // Sustituir para usar comparadores y búsqueda secuencial
+    // Sustituir para usar comparadores y búsqueda secuencial. DONE
     cout<<"4\t¿Cuál es la dirección de la red interna de la compañía?"<<endl;
     cout<<"La dirección de la red interna es: "<<obtenerIPBase(datos)<<endl;
     
+
+    // Para las que pregunta qué mails usa y qué puertos son menores a 1000, en la función de comparación podemos hacer que los añada a un Set y luego imprimir sus valores.
+
+
     return 0;
 }
