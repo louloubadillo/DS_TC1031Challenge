@@ -1,7 +1,11 @@
 #include <iostream>
 #include <vector>
+#include <map>
 #include "reader.hpp"
 using namespace std;
+
+map<string, int> mails;
+map<int, int> puertos;
 
 // Imprimir vectores
 void print_vector(vector<Registro> arr){
@@ -25,17 +29,15 @@ int busquedaSecuencial( vector<Registro> d, bool (*condicion)(Registro a, Regist
 }
 
 // BúsquedaBinaria
-int busquedaBinaria(vector<Registro>d, bool (*condicion)(Registro r), int inicio, int final){
-    // med
-    // declarar variables simultáneas para izquiera y derecha, como en el ejercicio del rascacielos. WIP
-
-    // int med = ...
-    if(final<inicio) return -1;
-    // if( condicion(datos[med]) ) return med;
-    // izq = busquedaBinaria(...), der = busquedaBinaria(...)
-    // return izq || derecha
-
-    return 0;
+int busquedaBinaria(vector<Registro>d, bool (*condicion)(Registro r), int inicio, int final){    
+    int med = inicio + (final - inicio)/2;
+    if(final<=inicio) return -1;
+    if( condicion(d[med]) ) return med;
+    int izq = busquedaBinaria(d, *condicion, inicio, med-1);
+    if(izq!=-1) return izq; 
+    int der = busquedaBinaria(d, *condicion, med+1, final);
+    if(der!=-1) return der;
+    return -1;
 }
 
 // ============================================================================
@@ -59,8 +61,41 @@ bool perteneceA(Registro r){
     );
 }
 
+bool seLlamaServer(Registro r){
+    return r.fuente_hostname == "server.reto.com" || r.destino_hostname == "server.com";
+}
+
+bool esCorreo(Registro r){
+    mails.insert(pair<string, int>("gmail.com", 0)); 
+    mails.insert(pair<string, int>("hotmail.com", 0));
+    mails.insert(pair<string, int>("outlook.com", 0));
+    mails.insert(pair<string, int>("hey.com", 0));
+    if(
+        r.destino_hostname == "gmail.com" ||
+        r.destino_hostname == "hotmail.com" ||
+        r.destino_hostname == "microsoft.com" ||
+        r.destino_hostname == "hey.com" 
+    ){
+        mails[r.destino_hostname]++; 
+        // return true; 
+    }
+    return false; 
+}
+
+bool esPuerto(Registro r){
+    if(r.destino_puerto<1000 && r.destino_puerto>0){
+        // Añadir al diccionario
+        puertos[r.destino_puerto]++;
+    }
+    if(r.fuente_puerto<1000 && r.fuente_puerto>0){
+        // Añadir al diccionario
+        puertos[r.fuente_puerto]++;
+    }
+    return false; 
+}
+
 string obtenerIPBase(vector<Registro> d){
-    int i = busquedaSecuencial(d, [](Registro r){ return r.fuente_ip != "-" });
+    int i = busquedaSecuencial(d, [](Registro r){ return r.fuente_ip != "-";});
     string ip = d[i+1].fuente_ip;
     for(int i = 0; i<3; i++) ip.pop_back();
     ip.append(".0");
@@ -87,18 +122,37 @@ int main(void){
     cout<<") hubieron "<<segundoDiaCount<<" datos"<<endl<<endl;
 
     //3. ¿Alguna de las computadoras pertenece a Jeffrey, Betty, Katherine, Scott, Benjamin, Samuel o Raymond?
-    cout<<"3\t¿Alguna de las computadoras pertenece a Jeffrey, Betty, Katherine, Scott, Benjamin, Samuel o Raymond? (IMPLEMENTAR BINARY SEARCH)"<<endl;
+    cout<<"3\t¿Alguna de las computadoras pertenece a Jeffrey, Betty, Katherine, Scott, Benjamin, Samuel o Raymond?"<<endl;
     int perteneceCount = busquedaBinaria(datos, *perteneceA, 0, datos.size()-1);
-    cout<<( perteneceCount==0 ? "No." : "Si." )<<endl<<endl;
+    cout<<( perteneceCount==0 ? "No." : "Sí." )<<endl;
 
     //4. ¿Cuál es la dirección de la red interna de la compañía?
     // Sustituir para usar comparadores y búsqueda secuencial. DONE
     cout<<"4\t¿Cuál es la dirección de la red interna de la compañía?"<<endl;
     cout<<"La dirección de la red interna es: "<<obtenerIPBase(datos)<<endl;
     
+    //5. ¿Alguna computadora se llama server.reto.com?
+    cout<<"5\t¿Alguna computadora se llama server.reto.com?"<<endl;
+    int serverCount = busquedaSecuencial(datos, *seLlamaServer);
+    cout<<( serverCount<0 ? "No." : "Sí." )<<endl;
 
-    // Para las que pregunta qué mails usa y qué puertos son menores a 1000, en la función de comparación podemos hacer que los añada a un Set y luego imprimir sus valores.
+    //6. ¿Qué servicio de mail utilizan? 
+    cout<<"6\t¿Qué servicio de mail utilizan?"<<endl;
+    int mailCount = busquedaSecuencial(datos, *esCorreo);
+    std::cout << "Mail" << "\t\t" << "Cantidad"<< "\n";
+    for (const auto& x : mails ) {
+        std::cout << x.first << " \t" << x.second << "\n";
+    }
 
+
+    //7. Considerando solamento los puertos destino: 
+    //¿Qué puertos abajo del 1000 se están usando? Lista los puertos. 
+    cout<<"7\t¿Qué puertos abajo del 1000 se están usando?"<<endl;
+    int puertosCount = busquedaSecuencial(datos, *esPuerto);
+    std::cout << "Puerto" << " \t" << "Cantidad"<< "\n";
+    for (const auto& x : puertos ) {
+        std::cout << x.first << " \t" << x.second << "\n";
+    }
 
     return 0;
 }

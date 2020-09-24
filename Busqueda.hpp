@@ -2,7 +2,8 @@
 #define Busqueda_h
 #include <vector>
 using namespace std;
-<template typename T>
+
+<template class T>
 class Busqueda{
     private:
         vector<T> datos;
@@ -16,7 +17,6 @@ class Busqueda{
             }
         }
         return -1; 
-    } 
 
     int binarySearchRec(vector<int> arr, int element, int min, int max){
             int middle = (min + max)/2; 
@@ -37,14 +37,16 @@ class Busqueda{
         int busqBinaria(vector<int> arr, int element){
             return binarySearchRec( arr, element, 0, elements.size()); 
         }
+
+        Busqueda(vector<Registro> d){
+             this->datos = d;
+        }
+
+        Busqueda::~Busqueda(){
+
+        }
 };
 
-Busqueda::Busqueda(vector<Registro> d){
-    this->datos = d;
-}
 
-Busqueda::~Busqueda(){
-
-}
 
 #endif
