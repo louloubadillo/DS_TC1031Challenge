@@ -1,3 +1,6 @@
+//Trabajo colaborativo 
+//Lourdes Badillo, A01024232
+//Eduardo Villalpando, A01023646
 #ifndef registro_h 
 #define registro_h
 #include <ctime>

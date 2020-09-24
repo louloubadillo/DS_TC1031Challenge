@@ -1,5 +1,8 @@
 // Referencia de código: https://www.gormanalysis.com/blog/reading-and-writing-csv-files-with-cpp/
 // Referencia de código: https://www.youtube.com/watch?v=wRj9PZ2wyZI
+//Trabajo colaborativo 
+//Lourdes Badillo, A01024232
+//Eduardo Villalpando, A01023646
 #ifndef reader_h 
 #define reader_h
 #include <string>
