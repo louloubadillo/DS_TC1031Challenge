@@ -87,10 +87,6 @@ bool esPuerto(Registro r){
         // Añadir al diccionario
         puertos[r.destino_puerto]++;
     }
-    if(r.fuente_puerto<1000 && r.fuente_puerto>0){
-        // Añadir al diccionario
-        puertos[r.fuente_puerto]++;
-    }
     return false; 
 }
 
