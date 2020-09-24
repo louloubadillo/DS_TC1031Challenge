@@ -1,3 +1,7 @@
+//Trabajo colaborativo 
+//Lourdes Badillo, A01024232
+//Eduardo Villalpando, A01023646
+
 #include <iostream>
 #include <vector>
 #include <map>
