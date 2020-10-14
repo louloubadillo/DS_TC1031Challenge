@@ -6,6 +6,7 @@
 #include <vector>
 #include <map>
 #include "reader.hpp"
+#include "ConexionesComputadora.hpp"
 using namespace std;
 
 map<string, int> mails;
@@ -45,44 +46,49 @@ int busquedaBinaria(vector<Registro>d, bool (*condicion)(Registro r), int inicio
 }
 
 // ============================================================================
-bool esPosterior(Registro a, Registro b){
-    return (
-        a.fecha.tm_mday > b.fecha.tm_mday &&
-        a.fecha.tm_mon >= b.fecha.tm_mon &&
-        a.fecha.tm_year >= b.fecha.tm_year
-    );
-}
+// bool esPosterior(Registro a, Registro b){
+//     return (
+//         a.fecha.tm_mday > b.fecha.tm_mday &&
+//         a.fecha.tm_mon >= b.fecha.tm_mon &&
+//         a.fecha.tm_year >= b.fecha.tm_year
+//     );
+// }
 
-bool perteneceA(Registro r){
-    return(
-        r.fuente_hostname == "jeffrey.reto.com" ||
-        r.fuente_hostname == "betty.reto.com" ||
-        r.fuente_hostname == "katherine.reto.com" ||
-        r.fuente_hostname == "scott.reto.com" ||
-        r.fuente_hostname == "benjamin.reto.com" ||
-        r.fuente_hostname == "samuel.reto.com" ||
-        r.fuente_hostname == "raymond.reto.com"
-    );
-}
+// bool perteneceA(Registro r){
+//     return(
+//         r.fuente_hostname == "jeffrey.reto.com" ||
+//         r.fuente_hostname == "betty.reto.com" ||
+//         r.fuente_hostname == "katherine.reto.com" ||
+//         r.fuente_hostname == "scott.reto.com" ||
+//         r.fuente_hostname == "benjamin.reto.com" ||
+//         r.fuente_hostname == "samuel.reto.com" ||
+//         r.fuente_hostname == "raymond.reto.com"
+//     );
+// }
 
-bool seLlamaServer(Registro r){
-    return r.fuente_hostname == "server.reto.com" || r.destino_hostname == "server.com";
-}
+// bool seLlamaServer(Registro r){
+//     return r.fuente_hostname == "server.reto.com" || r.destino_hostname == "server.com";
+// }
 
-bool esCorreo(Registro r){
-    //El puerto 993 se usa para mail
-    if(r.destino_puerto == 993){
-        mails[r.destino_hostname]++; 
-    }
-    return false; 
-}
+// bool esCorreo(Registro r){
+//     //El puerto 993 se usa para mail
+//     if(r.destino_puerto == 993){
+//         mails[r.destino_hostname]++; 
+//     }
+//     return false; 
+// }
 
-bool esPuerto(Registro r){
-    if(r.destino_puerto<1000 && r.destino_puerto>0){
-        // Añadir al diccionario
-        puertos[r.destino_puerto]++;
-    }
-    return false; 
+// bool esPuerto(Registro r){
+//     if(r.destino_puerto<1000 && r.destino_puerto>0){
+//         // Añadir al diccionario
+//         puertos[r.destino_puerto]++;
+//     }
+//     return false; 
+// }
+string IPUsuario;
+
+bool esIP(Registro r){
+    return r.fuente_ip == IPUsuario;
 }
 
 string obtenerIPBase(vector<Registro> d){
@@ -92,57 +98,87 @@ string obtenerIPBase(vector<Registro> d){
     ip.append(".0");
     return ip;
 }
+string obtenerIPUsuario(string base, int usuario){
+    string ipUsuario = base;
+    ipUsuario.pop_back();
+    ipUsuario.append( std::to_string(usuario) );
+    return ipUsuario;
+}
+
+int askNumber(vector <Registro> datos){
+    string IPBase = obtenerIPBase(datos);
+    int direccionUsuario;
+    while(direccionUsuario < 1 || direccionUsuario > 150){
+        cout<<"Ingresa un numero > \t";
+        cin>>direccionUsuario;
+    }
+    IPUsuario = obtenerIPUsuario(IPBase, direccionUsuario);
+    int usuarioIndex = busquedaSecuencial(datos, *esIP);
+    if (usuarioIndex == -1) return askNumber(datos);
+    return usuarioIndex; 
+}
+
+void llenar(vector <Registro> datos, ConexionesComputadora conexionUsuario){
+    for(int i=0; i<datos.size(); i++){
+        if( datos[i].destino_ip == conexionUsuario.IP ){
+            conexionUsuario.insertarEnConexionesEntrantes(
+                datos[i].destino_ip, 
+                datos[i].destino_puerto,
+                datos[i].destino_hostname
+            );
+        } 
+
+        if( datos[i].fuente_ip == conexionUsuario.IP ){
+            conexionUsuario.insertarEnConexionesSalientes(
+                datos[i].fuente_ip, 
+                datos[i].fuente_puerto,
+                datos[i].fuente_hostname
+            );
+        } 
+    }
+}
+
+bool esInterna(string IPBase, string IPInput){
+    // 172.26.89.0 == 172.26.89.142
+    for(int i=0; i<10; i++){
+        if( IPBase[i] != IPInput[i] ) return false;
+    }
+    return true; 
+}
 
 int main(void){
     Reader r; 
     vector <Registro> datos = r.readFile(); 
-    //1. ¿Cuántos registros tiene tu archivo?
-    cout<<"1\t¿Cuántos registros tiene tu archivo?"<<endl
-        <<"El archivo tiene "<<datos.size()<<" registros"<<endl<<endl;
-    
-    //2.¿Cuántos récords hay del segundo día registrado? ¿Qué día es este?
-    cout<<"2\t ¿Cuántos récords hay del segundo día registrado? ¿Qué día es?"<<endl;
-    int primerDiaCount = busquedaSecuencial(datos, *esPosterior, datos[0]);
-    int segundoDiaCount = busquedaSecuencial(datos, *esPosterior, datos[primerDiaCount]) - primerDiaCount;
-    
-    cout<<"En el primer día (";
-    datos[0].printDate();
-    cout<<") hubieron "<<primerDiaCount<<" datos"<<endl;
-    cout<<"En el segundo día (";
-    datos[segundoDiaCount].printDate();
-    cout<<") hubieron "<<segundoDiaCount<<" datos"<<endl<<endl;
 
-    //3. ¿Alguna de las computadoras pertenece a Jeffrey, Betty, Katherine, Scott, Benjamin, Samuel o Raymond?
-    cout<<"3\t¿Alguna de las computadoras pertenece a Jeffrey, Betty, Katherine, Scott, Benjamin, Samuel o Raymond?"<<endl;
-    int perteneceCount = busquedaSecuencial(datos, *perteneceA);
-    cout<<( perteneceCount==0 ? "No." : "Sí." )<<endl;
+    string IPBase = obtenerIPBase(datos); 
 
-    //4. ¿Cuál es la dirección de la red interna de la compañía?
-    // Sustituir para usar comparadores y búsqueda secuencial. DONE
-    cout<<"4\t¿Cuál es la dirección de la red interna de la compañía?"<<endl;
-    cout<<"La dirección de la red interna es: "<<obtenerIPBase(datos)<<endl;
-    
-    //5. ¿Alguna computadora se llama server.reto.com?
-    cout<<"5\t¿Alguna computadora se llama server.reto.com?"<<endl;
-    int serverCount = busquedaSecuencial(datos, *seLlamaServer);
-    cout<<( serverCount<0 ? "No." : "Sí." )<<endl;
+    int usuarioIndex = askNumber(datos);
+    string nombreUsuario = datos[usuarioIndex].fuente_hostname;
+    ConexionesComputadora conexionUsuario = ConexionesComputadora(IPUsuario, nombreUsuario); 
+    llenar(datos, conexionUsuario);
 
-    //6. ¿Qué servicio de mail utilizan? 
-    cout<<"6\t¿Qué servicio de mail utilizan?"<<endl;
-    int mailCount = busquedaSecuencial(datos, *esCorreo);
-    std::cout << "Mail" << "\t\t" << "Cantidad"<< "\n";
-    for (const auto& x : mails ) {
-        std::cout << x.first << " \t" << x.second << "\n";
-    }
-
-    //7. Considerando solamento los puertos destino: 
-    //¿Qué puertos abajo del 1000 se están usando? Lista los puertos. 
-    cout<<"7\t¿Qué puertos abajo del 1000 se están usando?"<<endl;
-    int puertosCount = busquedaSecuencial(datos, *esPuerto);
-    std::cout << "Puerto" << " \t" << "Cantidad"<< "\n";
-    for (const auto& x : puertos ) {
-        std::cout << x.first << " \t" << x.second << "\n";
-    }
-
+    string IPConocida = "172.26.89.142"; 
+    ConexionesComputadora computadoraConocida = ConexionesComputadora(IPConocida, "janet.reto.com");
+    llenar(datos, computadoraConocida);
+    //¿Qué dirección ip estas usando?
+    cout<<"¿Qué dirección IP estás usando?"<<endl;
+    cout<<"\t Estoy usando la dirección ip "<<IPConocida<<endl;
+    //¿Cuál fue la ip de la última conexión que recibió esta computadora? ¿Es interna o externa?
+    cout << "¿Cuál fue la ip de la última conexión que recibió esta computadora?" << endl; 
+    string sth = computadoraConocida.ultimaConexionEntrante(); 
+    cout<<"\t La ip de la última conexión que recibió esta computadora es: "<< sth <<endl;
+    cout << "¿Es interna o externa?" << endl;
+    cout << (esInterna(IPBase, sth) ? "Es interna" : "Es externa") << endl;
+    //¿Cuántas conexiones entrantes tiene esta computadora?
+    cout << "¿Cuántas conexiones entrantes tiene esta computadora?" << endl; 
+    cout << (esInterna(IPBase, sth) ? "Es interna" : "Es externa") << endl;
+    //¿Cuántas conexiones entrantes tiene esta computadora?
+    cout << "¿Cuántas conexiones entrantes tiene esta computadora?" << endl; 
+    cout << "\t Esta computadora tiene " << computadoraConocida.conexionesEntrantes.size() << "conexiones entrantes" << endl;
+    //¿Cuántas conexiones salientes tiene esta computadora?
+    cout << "¿Cuántas conexiones salientes tiene esta computadora?" << endl; 
+    cout << "\t Esta computadora tiene "<<computadoraConocida.conexionesSalientes.size() << "conexiones salientes" << endl;
+    //Extra: ¿Tiene esta computadora 3 conexiones seguidas a un mismo sitio web?
+    cout << "¿Tiene esta computadora 3 conexiones seguidas a un mismo sitio web?" << endl; 
     return 0;
 }
