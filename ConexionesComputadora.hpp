@@ -7,6 +7,7 @@
 #include <list>
 #include "Conexion.hpp"
 #include <iostream>
+
 class ConexionesComputadora{
     public:
         ConexionesComputadora(std::string IP, std::string nombre){
@@ -30,11 +31,7 @@ class ConexionesComputadora{
         }
 
         std::string ultimaConexionEntrante(){
-            //Conexion sth = conexionesEntrantes.back(); 
-            std::cout << "hi" << std::endl;  
-            //std::cout << sth.getIP() << std::endl; 
-            return "hello"; 
+            return conexionesEntrantes.back().getIP(); 
         }
-}; 
-
+};
 #endif

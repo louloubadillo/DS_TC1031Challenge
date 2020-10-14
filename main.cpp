@@ -33,58 +33,6 @@ int busquedaSecuencial( vector<Registro> d, bool (*condicion)(Registro a, Regist
     return -1;
 }
 
-// BúsquedaBinaria
-int busquedaBinaria(vector<Registro>d, bool (*condicion)(Registro r), int inicio, int final){    
-    int med = inicio + (final - inicio)/2;
-    if(final<=inicio) return -1;
-    if( condicion(d[med]) ) return med;
-    int izq = busquedaBinaria(d, *condicion, inicio, med-1);
-    if(izq!=-1) return izq; 
-    int der = busquedaBinaria(d, *condicion, med+1, final);
-    if(der!=-1) return der;
-    return -1;
-}
-
-// ============================================================================
-// bool esPosterior(Registro a, Registro b){
-//     return (
-//         a.fecha.tm_mday > b.fecha.tm_mday &&
-//         a.fecha.tm_mon >= b.fecha.tm_mon &&
-//         a.fecha.tm_year >= b.fecha.tm_year
-//     );
-// }
-
-// bool perteneceA(Registro r){
-//     return(
-//         r.fuente_hostname == "jeffrey.reto.com" ||
-//         r.fuente_hostname == "betty.reto.com" ||
-//         r.fuente_hostname == "katherine.reto.com" ||
-//         r.fuente_hostname == "scott.reto.com" ||
-//         r.fuente_hostname == "benjamin.reto.com" ||
-//         r.fuente_hostname == "samuel.reto.com" ||
-//         r.fuente_hostname == "raymond.reto.com"
-//     );
-// }
-
-// bool seLlamaServer(Registro r){
-//     return r.fuente_hostname == "server.reto.com" || r.destino_hostname == "server.com";
-// }
-
-// bool esCorreo(Registro r){
-//     //El puerto 993 se usa para mail
-//     if(r.destino_puerto == 993){
-//         mails[r.destino_hostname]++; 
-//     }
-//     return false; 
-// }
-
-// bool esPuerto(Registro r){
-//     if(r.destino_puerto<1000 && r.destino_puerto>0){
-//         // Añadir al diccionario
-//         puertos[r.destino_puerto]++;
-//     }
-//     return false; 
-// }
 string IPUsuario;
 
 bool esIP(Registro r){
@@ -118,21 +66,21 @@ int askNumber(vector <Registro> datos){
     return usuarioIndex; 
 }
 
-void llenar(vector <Registro> datos, ConexionesComputadora conexionUsuario){
+void llenar(vector <Registro> datos, ConexionesComputadora &conexionInput){
     for(int i=0; i<datos.size(); i++){
-        if( datos[i].destino_ip == conexionUsuario.IP ){
-            conexionUsuario.insertarEnConexionesEntrantes(
-                datos[i].destino_ip, 
-                datos[i].destino_puerto,
-                datos[i].destino_hostname
-            );
-        } 
-
-        if( datos[i].fuente_ip == conexionUsuario.IP ){
-            conexionUsuario.insertarEnConexionesSalientes(
+        if( datos[i].destino_ip == conexionInput.IP ){
+            conexionInput.insertarEnConexionesEntrantes(
                 datos[i].fuente_ip, 
                 datos[i].fuente_puerto,
                 datos[i].fuente_hostname
+            );
+        } 
+
+        if( datos[i].fuente_ip == conexionInput.IP ){
+            conexionInput.insertarEnConexionesSalientes(
+                datos[i].destino_ip, 
+                datos[i].destino_puerto,
+                datos[i].destino_hostname
             );
         } 
     }
@@ -146,6 +94,22 @@ bool esInterna(string IPBase, string IPInput){
     return true; 
 }
 
+bool ThreeInaRow(ConexionesComputadora &conexionInput){
+    // [ ... x x x ...  ]
+    auto Ptr1 = conexionInput.conexionesSalientes.begin();
+    auto Ptr2 = std::next(Ptr1, 1);
+    auto Ptr3 = std::next(Ptr2, 1);
+    
+    for(int i=0; i<conexionInput.conexionesSalientes.size() - 3; i++){
+        if(Ptr1->getIP() == Ptr2->getIP() &&  Ptr2->getIP() == Ptr3->getIP()) return true;
+
+        Ptr1 = std::next(Ptr1, 1);
+        Ptr2 = std::next(Ptr2, 1);
+        Ptr3 = std::next(Ptr3, 1);
+    }
+    return false;
+}
+
 int main(void){
     Reader r; 
     vector <Registro> datos = r.readFile(); 
@@ -156,29 +120,25 @@ int main(void){
     string nombreUsuario = datos[usuarioIndex].fuente_hostname;
     ConexionesComputadora conexionUsuario = ConexionesComputadora(IPUsuario, nombreUsuario); 
     llenar(datos, conexionUsuario);
-
-    string IPConocida = "172.26.89.142"; 
-    ConexionesComputadora computadoraConocida = ConexionesComputadora(IPConocida, "janet.reto.com");
+    ConexionesComputadora computadoraConocida = ConexionesComputadora("172.26.89.142", "janet.reto.com");
     llenar(datos, computadoraConocida);
     //¿Qué dirección ip estas usando?
     cout<<"¿Qué dirección IP estás usando?"<<endl;
-    cout<<"\t Estoy usando la dirección ip "<<IPConocida<<endl;
+    cout<<"\t Estoy usando la dirección ip "<<computadoraConocida.IP<<endl;
     //¿Cuál fue la ip de la última conexión que recibió esta computadora? ¿Es interna o externa?
     cout << "¿Cuál fue la ip de la última conexión que recibió esta computadora?" << endl; 
-    string sth = computadoraConocida.ultimaConexionEntrante(); 
-    cout<<"\t La ip de la última conexión que recibió esta computadora es: "<< sth <<endl;
+    string ultimaConexion = computadoraConocida.ultimaConexionEntrante(); 
+    cout<<"\t La ip de la última conexión que recibió esta computadora es: "<< ultimaConexion <<endl;
     cout << "¿Es interna o externa?" << endl;
-    cout << (esInterna(IPBase, sth) ? "Es interna" : "Es externa") << endl;
+    cout << "\t" << (esInterna(IPBase, ultimaConexion) ? "Es interna" : "Es externa") << endl;
     //¿Cuántas conexiones entrantes tiene esta computadora?
-    cout << "¿Cuántas conexiones entrantes tiene esta computadora?" << endl; 
-    cout << (esInterna(IPBase, sth) ? "Es interna" : "Es externa") << endl;
-    //¿Cuántas conexiones entrantes tiene esta computadora?
-    cout << "¿Cuántas conexiones entrantes tiene esta computadora?" << endl; 
-    cout << "\t Esta computadora tiene " << computadoraConocida.conexionesEntrantes.size() << "conexiones entrantes" << endl;
+    cout << " ¿Cuántas conexiones entrantes tiene esta computadora?" << endl; 
+    cout << "\t Esta computadora tiene " << computadoraConocida.conexionesEntrantes.size() << " conexiones entrantes" << endl;
     //¿Cuántas conexiones salientes tiene esta computadora?
     cout << "¿Cuántas conexiones salientes tiene esta computadora?" << endl; 
-    cout << "\t Esta computadora tiene "<<computadoraConocida.conexionesSalientes.size() << "conexiones salientes" << endl;
+    cout << "\t Esta computadora tiene "<<computadoraConocida.conexionesSalientes.size() << " conexiones salientes" << endl;
     //Extra: ¿Tiene esta computadora 3 conexiones seguidas a un mismo sitio web?
     cout << "¿Tiene esta computadora 3 conexiones seguidas a un mismo sitio web?" << endl; 
+    cout << "\t" << (ThreeInaRow(computadoraConocida) ? "Sí tiene 3 conexiones seguidas" : "No tiene 3 conexiones seguidas") << endl;
     return 0;
 }
