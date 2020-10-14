@@ -1,6 +1,9 @@
-//Trabajo colaborativo 
+
+//Este programa asocia direcciones IP de entrada y salida a una computadora.
+//Trabajo colaborativo por:
 //Lourdes Badillo, A01024232
 //Eduardo Villalpando, A01023646
+//13/10/2020
 
 #include <iostream>
 #include <vector>
@@ -9,8 +12,6 @@
 #include "ConexionesComputadora.hpp"
 using namespace std;
 
-map<string, int> mails;
-map<int, int> puertos;
 
 // Imprimir vectores
 void print_vector(vector<Registro> arr){
