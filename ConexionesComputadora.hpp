@@ -22,7 +22,7 @@ class ConexionesComputadora{
 
         void insertarEnConexionesEntrantes(std::string IP, int puerto, std::string host){
             Conexion c(IP, puerto, host);
-            conexionesEntrantes.push_back(c);
+            conexionesEntrantes.push_front(c);
         }
 
         void insertarEnConexionesSalientes(std::string IP, int puerto, std::string host){
@@ -31,7 +31,7 @@ class ConexionesComputadora{
         }
 
         std::string ultimaConexionEntrante(){
-            return conexionesEntrantes.back().getIP(); 
+            return conexionesEntrantes.front().getIP(); 
         }
 };
 #endif

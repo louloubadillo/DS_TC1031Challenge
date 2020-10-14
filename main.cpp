@@ -119,6 +119,7 @@ int main(void){
     int usuarioIndex = askNumber(datos);
     string nombreUsuario = datos[usuarioIndex].fuente_hostname;
     ConexionesComputadora conexionUsuario = ConexionesComputadora(IPUsuario, nombreUsuario); 
+    cout <<"La IP interna correspondiente es: " <<conexionUsuario.IP << endl; 
     llenar(datos, conexionUsuario);
     ConexionesComputadora computadoraConocida = ConexionesComputadora("172.26.89.142", "janet.reto.com");
     llenar(datos, computadoraConocida);
