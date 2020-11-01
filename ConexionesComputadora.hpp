@@ -14,6 +14,7 @@ class ConexionesComputadora{
             this->IP = IP;
             this->nombre = nombre; 
         };
+        ConexionesComputadora(){};
         ~ConexionesComputadora() {}; 
         std::string IP;
         std::string nombre;
@@ -32,6 +33,26 @@ class ConexionesComputadora{
 
         std::string ultimaConexionEntrante(){
             return conexionesEntrantes.front().getIP(); 
+        }
+
+        void llenar(vector <Registro> datos){
+            for(int i=0; i<datos.size(); i++){
+                if( datos[i].destino_ip == this->IP ){
+                    this->insertarEnConexionesEntrantes(
+                        datos[i].fuente_ip, 
+                        datos[i].fuente_puerto,
+                        datos[i].fuente_hostname
+                    );
+                } 
+
+                if( datos[i].fuente_ip == this->IP ){
+                    this->insertarEnConexionesSalientes(
+                        datos[i].destino_ip, 
+                        datos[i].destino_puerto,
+                        datos[i].destino_hostname
+                    );
+                } 
+            }
         }
 };
 #endif

@@ -96,7 +96,7 @@ bool esInterna(string IPBase, string IPInput){
 }
 
 bool ThreeInaRow(ConexionesComputadora &conexionInput){
-    // [ ... x x x ...  ]
+    //[ ... x x x ...  ]
     auto Ptr1 = conexionInput.conexionesSalientes.begin();
     auto Ptr2 = std::next(Ptr1, 1);
     auto Ptr3 = std::next(Ptr2, 1);
