@@ -38,18 +38,39 @@ int busquedaSecuencial( vector<Registro> d, bool (*condicion)(Registro a, Regist
 
 
 void agregarNoRetoASet(set<string> s, vector<Registro> datos){
-    for(int i=0; i<datos.size(); i++){
-        if(datos[i].fuente_hostname.find(".reto.com")){
+    for(int i=0; i<5000; i++){
+        if(datos[i].fuente_hostname.find(".reto.com") || datos[i].fuente_hostname.find("-") ){
             s.insert(datos[i].fuente_hostname); 
         }
     }
 }
 
-void llenarComputadoras(map<string, ConexionesComputadora> computadoras, vector<Registro> datos){
-    for(int i=0; i<500; i++){ //Cambiar a datos.size()
+void llenarComputadoras(map<string, ConexionesComputadora> &computadoras, vector<Registro> datos){
+    // throwback a nuestro debugging de una hora, porque no estábamos editando el map original :)
+    for(int i=0; i<6000; i++){ //Cambiar a datos.size()
         ConexionesComputadora c(datos[i].fuente_ip, datos[i].fuente_hostname);
         c.llenar(datos);
         computadoras.insert(pair<string,ConexionesComputadora>(datos[i].fuente_ip,c));
+    }
+}
+
+void agregarNoRetoASetyLlenarComputadoras(set<string> s, map<string, ConexionesComputadora> &computadoras, vector<Registro> datos){
+    for(size_t i=0; i<datos.size(); i++){
+        if(datos[i].fuente_hostname.find(".reto.com") || datos[i].fuente_hostname.find("-") ){
+            s.insert(datos[i].fuente_hostname); 
+        }
+        // Correr si la IP origen no está en el map
+        if( datos[i].fuente_ip != "-" && computadoras.find(datos[i].fuente_ip) == computadoras.end() ){
+            ConexionesComputadora c(datos[i].fuente_ip, datos[i].fuente_hostname);
+            c.llenar(datos);
+            computadoras.insert(pair<string,ConexionesComputadora>(datos[i].fuente_ip,c));
+        }
+        // Correr si la IP destino no está en el map
+        if( datos[i].destino_ip != "-" && computadoras.find(datos[i].destino_ip) == computadoras.end()){
+            ConexionesComputadora c(datos[i].destino_ip, datos[i].destino_hostname);
+            c.llenar(datos);
+            computadoras.insert(pair<string,ConexionesComputadora>(datos[i].destino_ip,c));
+        }
     }
 }
 
@@ -58,47 +79,115 @@ bool esAnomalo(string nombre){
     // caracteres alfanumericos
     if (nombre.size() >= 20) return true;
     for(int i=0; i<nombre.size(); i++){
-        if(isalnum(nombre[i]) == false ){
+        if(isalpha(nombre[i]) == false && nombre[i] != '.' && nombre[i] != '-'&&  nombre[i] != '/' ){
             return true;  
         }
     }
     return false; 
 }
 
-string encontrarAnomalos(vector <Registro> datos){
-    for(int i=0; i<datos.size(); i++){
-        if( esAnomalo(datos[i].destino_hostname) ) return datos[i].destino_hostname;
+string encontrarAnomalos(map<string, ConexionesComputadora> computadoras){
+    map<string, ConexionesComputadora>::iterator it;
+    for(it = computadoras.begin(); it != computadoras.end(); it++){
+        if( esAnomalo( it->second.nombre ) ) return it->first;
     }
+
     return "";
 }
 
-int computadorasConConexionesEntrantes(map<string, ConexionesComputadora> computadoras){
-    int n;
-    for (const auto & [key, conexionComputadora] : computadoras){ // iterar el mapa <strng, ConexionesComputadora>
-        if(conexionComputadora.IP.find("reto.com") && conexionComputadora.conexionesEntrantes.size() >= 1) n++;
+int computadorasConConexionesEntrantes(map<string, ConexionesComputadora> computadoras){ 
+    int n = 0;
+    map<string, ConexionesComputadora>::iterator it;
+    for(it = computadoras.begin(); it != computadoras.end(); it++ ){
+        if(it->second.nombre.find("reto.com") != string::npos && it->second.conexionesEntrantes.size() >= 1) n++;
     }
     return n;
+} 
+
+set<string> obtenerIPsEntrantes(map<string, ConexionesComputadora> computadoras) {
+    /**
+     * - for computadora in computadoras
+     * -    si computadora.IP != server.reto.com
+     *          iterar por conexiones entrantes
+     *              si conexionEntrante.puerto != 67
+     *                  agregar IP al set (para que no se repita :))
+     * regresar set
+     * Los mensajes DHCP utilizan el puerto 67 (UDP) como puerto del servidor
+    */
+    set<string> ipsUnicas;
+
+    map<string, ConexionesComputadora>::iterator it;
+    int n = 0;
+    for(it = computadoras.begin(); it != computadoras.end(); it++ ){
+        if( it->second.nombre.find(".reto.com") == string::npos /*no lo encontró*/ ){
+            n++;
+            // Convertir a vector para poder acceder los índices de manera más fácil ;D
+            vector<Conexion> conexionesV{begin(it->second.conexionesEntrantes), end(it->second.conexionesEntrantes) };
+            for(int i=0; i< conexionesV.size(); i++ ){
+                if ( conexionesV[i].puerto != 67 ) ipsUnicas.insert( conexionesV[i].IP );
+            }
+        }
+    }
+    // cout<<n<<" computadoras no son server.reto.com"<<endl;
+
+   return ipsUnicas; 
 }
+
+// set<ConexionesComputadora> obtenerConexionesEntrantes(map<string, ConexionesComputadora> computadoras) {
+//     /**
+//      * - for computadora in computadoras
+//      * -    si computadora.IP != server.reto.com
+//      *          iterar por conexiones entrantes
+//      *              si conexionEntrante.puerto != 67
+//      *                  agregar IP al set (para que no se repita :))
+//      * regresar set
+//      * Los mensajes DHCP utilizan el puerto 67 (UDP) como puerto del servidor
+//     */
+//     set<ConexionesComputadora> ipsUnicas;
+
+//     map<string, ConexionesComputadora>::iterator it;
+//     int n = 0;
+//     for(it = computadoras.begin(); it != computadoras.end(); it++ ){
+//         if( it->second.nombre.find(".reto.com") == string::npos /*no lo encontró*/ ){
+//             n++;
+//             // Convertir a vector para poder acceder los índices de manera más fácil ;D
+//             vector<Conexion> conexionesV{begin(it->second.conexionesEntrantes), end(it->second.conexionesEntrantes) };
+//             for(int i=0; i< conexionesV.size(); i++ ){
+//                 if ( conexionesV[i].puerto != 67 ) ipsUnicas.insert( it->second );
+//             }
+//         }
+//     }
+//     // cout<<n<<" computadoras no son server.reto.com"<<endl;
+
+//    return ipsUnicas; 
+// }
+
 
 int main(void){
     Reader r; 
     vector <Registro> datos = r.readFile(); 
     // Cree un conjunto de strings. En este debes agregar los nombres de los dominios/computadoras que no pertenezcan al dominio reto.com.
     set<string> notReto; 
-    agregarNoRetoASet(notReto, datos);
+    // -- agregarNoRetoASet(notReto, datos);
     // Crea una diccionario de pares <string,ConexionesComputadora> usando la clase creada en el reto pasado. 
     // Este diccionario debe ser llenado con todas las ips en los datos. 
     // Por cada una, es necesario registrar todas las conexiones que hayan salido desde esta ip o hayan sido recibidas por la misma.
     map<string, ConexionesComputadora> computadoras; 
-    llenarComputadoras(computadoras, datos);
-    
+    // -- llenarComputadoras(computadoras, datos); 
+
+    agregarNoRetoASetyLlenarComputadoras(notReto, computadoras, datos);
+    cout << "0. Hay "<<computadoras.size()<<" computadoras"<<endl;
+
+
     //Hay algún nombre de dominio que sea anómalo (Esto puede ser con inspección visual).
     cout << "1. ¿Hay algún nombre de dominio que sea anómalo?" << endl; //ds19smmrn47jp3osf6x4.com
-    cout << (encontrarAnomalos(datos)!="" ? "Sí." : "No.") << endl; 
+    cout << (encontrarAnomalos(computadoras)!="" ? "Sí." : "No.") << endl; 
     
     // De los nombres de dominio encontrados en el paso anterior, ¿Cuál es su ip? 
     // ¿Cómo determinarías esta información de la manera más eficiente en complejidad temporal?
     cout << "2. ¿Cuál es su IP? ¿Cómo determinarías esta información de la manera más eficiente en complejidad temporal?" << endl;
+    cout << "La IP es " << encontrarAnomalos(computadoras) << endl;
+    
     cout << "Con una inspección visual identificamos: ds19smmrn47jp3osf6x4.com" << endl; 
     cout << "Hicimos una función prototipo de cómo se podrían encontrar dominios anómalos: encontrarAnomalos(datos)" << endl; 
     cout << "Para esto usamos como parámetros el largo del dominio y si contiene caracteres no alfanuméricos" << endl; 
@@ -111,12 +200,27 @@ int main(void){
     cout << computadorasConConexionesEntrantes(computadoras) << " computadoras de la red interna con al menos una conexion entrante" << endl;
 
     //Toma algunas computadoras que no sean server.reto.com o el servidor dhcp. Pueden ser entre 5 y 150. Obtén las ip únicas de las conexiones entrantes.
-    cout << "Toma algunas computadoras que no sean server.reto.com o el servidor dhcp. Pueden ser entre 5 y 150. Obtén las ip únicas de las conexiones entrantes." << endl;
+    cout << "4. Toma algunas computadoras que no sean server.reto.com o el servidor dhcp. Pueden ser entre 5 y 150. Obtén las ip únicas de las conexiones entrantes." << endl;
+    set<string> conexiones = obtenerIPsEntrantes(computadoras);
+    cout << "Hay " << conexiones.size() << " conexiones entrantes a computadoras externas." << endl; 
     
+    for (auto it = conexiones.begin(); it != conexiones.end(); ++it){
+        cout << ' ' << *it << endl;
+        // vector<Conexion> conexionesV{begin(it->conexionesEntrantes), end(it->conexionesEntrantes) };
+        // for(int i=0; i<conexionesV.size(); i++){
+        //     cout << "\t" << conexionesV[i].IP<<endl;
+        // }
+    }
     
+    cout << "5. Considerando el resultado de las preguntas 3 y 4, ¿Qué crees que esté ocurriendo en esta red? (Pregunta sin código)"<<endl;
+    cout << "32 computadoras internas tienen conexiones entrantes. Esto significa que computadoras externas están intentando acceder a la información. "<<endl;
+    cout << "De las conexiones entrantes, puede  "<<endl;
     //Considerando el resultado de las preguntas 3 y 4, ¿Qué crees que esté ocurriendo en esta red? (Pregunta sin código)
     //Para las ips encontradas en el paso anterior, determina si se han comunicado con los datos encontrados en la pregunta 1.
     //(Extra):  En caso de que hayas encontrado que las computadoras del paso 1 y 4 se comunican, determina en qué fecha ocurre la primera comunicación entre estas 2 y qué protocolo se usó.
     
+    // 
+
+
     return 0;
 }

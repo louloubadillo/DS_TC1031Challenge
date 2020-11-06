@@ -14,7 +14,10 @@ class ConexionesComputadora{
             this->IP = IP;
             this->nombre = nombre; 
         };
-        ConexionesComputadora(){};
+        ConexionesComputadora(){
+            this->IP="";
+            this->nombre="";
+        };
         ~ConexionesComputadora() {}; 
         std::string IP;
         std::string nombre;
