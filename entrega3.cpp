@@ -95,6 +95,7 @@ string encontrarAnomalos(map<string, ConexionesComputadora> computadoras){
     return "";
 }
 
+
 int computadorasConConexionesEntrantes(map<string, ConexionesComputadora> computadoras){ 
     int n = 0;
     map<string, ConexionesComputadora>::iterator it;
@@ -123,9 +124,14 @@ set<string> obtenerIPsEntrantes(map<string, ConexionesComputadora> computadoras)
             n++;
             // Convertir a vector para poder acceder los índices de manera más fácil ;D
             vector<Conexion> conexionesV{begin(it->second.conexionesEntrantes), end(it->second.conexionesEntrantes) };
+            set<string> nombresPorComputadoraUnicos;
             for(int i=0; i< conexionesV.size(); i++ ){
-                if ( conexionesV[i].puerto != 67 ) ipsUnicas.insert( conexionesV[i].IP );
+                if ( conexionesV[i].puerto != 67 ){
+                    nombresPorComputadoraUnicos.insert(conexionesV[i].host);
+                    ipsUnicas.insert( conexionesV[i].IP );
+                }
             }
+            // cout<< it->second.nombre <<": ("<<nombresPorComputadoraUnicos.size()<<")"<<endl;
         }
     }
     // cout<<n<<" computadoras no son server.reto.com"<<endl;
@@ -133,34 +139,6 @@ set<string> obtenerIPsEntrantes(map<string, ConexionesComputadora> computadoras)
    return ipsUnicas; 
 }
 
-// set<ConexionesComputadora> obtenerConexionesEntrantes(map<string, ConexionesComputadora> computadoras) {
-//     /**
-//      * - for computadora in computadoras
-//      * -    si computadora.IP != server.reto.com
-//      *          iterar por conexiones entrantes
-//      *              si conexionEntrante.puerto != 67
-//      *                  agregar IP al set (para que no se repita :))
-//      * regresar set
-//      * Los mensajes DHCP utilizan el puerto 67 (UDP) como puerto del servidor
-//     */
-//     set<ConexionesComputadora> ipsUnicas;
-
-//     map<string, ConexionesComputadora>::iterator it;
-//     int n = 0;
-//     for(it = computadoras.begin(); it != computadoras.end(); it++ ){
-//         if( it->second.nombre.find(".reto.com") == string::npos /*no lo encontró*/ ){
-//             n++;
-//             // Convertir a vector para poder acceder los índices de manera más fácil ;D
-//             vector<Conexion> conexionesV{begin(it->second.conexionesEntrantes), end(it->second.conexionesEntrantes) };
-//             for(int i=0; i< conexionesV.size(); i++ ){
-//                 if ( conexionesV[i].puerto != 67 ) ipsUnicas.insert( it->second );
-//             }
-//         }
-//     }
-//     // cout<<n<<" computadoras no son server.reto.com"<<endl;
-
-//    return ipsUnicas; 
-// }
 
 
 int main(void){
@@ -186,7 +164,8 @@ int main(void){
     // De los nombres de dominio encontrados en el paso anterior, ¿Cuál es su ip? 
     // ¿Cómo determinarías esta información de la manera más eficiente en complejidad temporal?
     cout << "2. ¿Cuál es su IP? ¿Cómo determinarías esta información de la manera más eficiente en complejidad temporal?" << endl;
-    cout << "La IP es " << encontrarAnomalos(computadoras) << endl;
+    string ipAnomala = encontrarAnomalos(computadoras); 
+    cout << "La IP es " << ipAnomala << endl;
     
     cout << "Con una inspección visual identificamos: ds19smmrn47jp3osf6x4.com" << endl; 
     cout << "Hicimos una función prototipo de cómo se podrían encontrar dominios anómalos: encontrarAnomalos(datos)" << endl; 
@@ -202,22 +181,32 @@ int main(void){
     //Toma algunas computadoras que no sean server.reto.com o el servidor dhcp. Pueden ser entre 5 y 150. Obtén las ip únicas de las conexiones entrantes.
     cout << "4. Toma algunas computadoras que no sean server.reto.com o el servidor dhcp. Pueden ser entre 5 y 150. Obtén las ip únicas de las conexiones entrantes." << endl;
     set<string> conexiones = obtenerIPsEntrantes(computadoras);
-    cout << "Hay " << conexiones.size() << " conexiones entrantes a computadoras externas." << endl; 
     
     for (auto it = conexiones.begin(); it != conexiones.end(); ++it){
         cout << ' ' << *it << endl;
-        // vector<Conexion> conexionesV{begin(it->conexionesEntrantes), end(it->conexionesEntrantes) };
-        // for(int i=0; i<conexionesV.size(); i++){
-        //     cout << "\t" << conexionesV[i].IP<<endl;
-        // }
     }
     
+    //Considerando el resultado de las preguntas 3 y 4, ¿Qué crees que esté ocurriendo en esta red? (Pregunta sin código)
     cout << "5. Considerando el resultado de las preguntas 3 y 4, ¿Qué crees que esté ocurriendo en esta red? (Pregunta sin código)"<<endl;
     cout << "32 computadoras internas tienen conexiones entrantes. Esto significa que computadoras externas están intentando acceder a la información. "<<endl;
-    cout << "De las conexiones entrantes, puede  "<<endl;
-    //Considerando el resultado de las preguntas 3 y 4, ¿Qué crees que esté ocurriendo en esta red? (Pregunta sin código)
+    cout << "De las conexiones entrantes, puede identificarse que existe solo una conexión al dominio anómalo"<<endl;
+
     //Para las ips encontradas en el paso anterior, determina si se han comunicado con los datos encontrados en la pregunta 1.
-    //(Extra):  En caso de que hayas encontrado que las computadoras del paso 1 y 4 se comunican, determina en qué fecha ocurre la primera comunicación entre estas 2 y qué protocolo se usó.
+    // Iterar conexiones entrantes de ip anomala;
+    // Ver si alguna conexión pertnece a conexiones
+    list<Conexion> conexionesEntrantesAIPAnomala = computadoras[ipAnomala].conexionesEntrantes;
+    map<string, int> culpable;
+    for (auto it = conexionesEntrantesAIPAnomala.begin(); it != conexionesEntrantesAIPAnomala.end(); ++it){
+        culpable[ it->host ] ++;
+        // cout << ' ' << it->IP << "(" << it->host << ")" << endl;
+    }
+    for (auto it = culpable.begin(); it != culpable.end(); it++){
+        cout << it->first << ": " << it->second << endl;
+    }
+
+    // cout << *computadoras[ipAnomala]. << endl; 
+    
+    // (Extra):  En caso de que hayas encontrado que las computadoras del paso 1 y 4 se comunican, determina en qué fecha ocurre la primera comunicación entre estas 2 y qué protocolo se usó.
     
     // 
 
