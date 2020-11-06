@@ -3,7 +3,7 @@
 //Trabajo colaborativo por:
 //Lourdes Badillo, A01024232
 //Eduardo Villalpando, A01023646
-//13/10/2020
+//9/11/2020
 
 #include <iostream>
 #include <vector>
@@ -91,7 +91,6 @@ string encontrarAnomalos(map<string, ConexionesComputadora> computadoras){
     for(it = computadoras.begin(); it != computadoras.end(); it++){
         if( esAnomalo( it->second.nombre ) ) return it->first;
     }
-
     return "";
 }
 
@@ -131,10 +130,8 @@ set<string> obtenerIPsEntrantes(map<string, ConexionesComputadora> computadoras)
                     ipsUnicas.insert( conexionesV[i].IP );
                 }
             }
-            // cout<< it->second.nombre <<": ("<<nombresPorComputadoraUnicos.size()<<")"<<endl;
         }
     }
-    // cout<<n<<" computadoras no son server.reto.com"<<endl;
 
    return ipsUnicas; 
 }
@@ -159,37 +156,37 @@ int main(void){
 
     //Hay algún nombre de dominio que sea anómalo (Esto puede ser con inspección visual).
     cout << "1. ¿Hay algún nombre de dominio que sea anómalo?" << endl; //ds19smmrn47jp3osf6x4.com
-    cout << (encontrarAnomalos(computadoras)!="" ? "Sí." : "No.") << endl; 
+    cout <<"\t"<<(encontrarAnomalos(computadoras)!="" ? "Sí." : "No.") << endl; 
     
     // De los nombres de dominio encontrados en el paso anterior, ¿Cuál es su ip? 
     // ¿Cómo determinarías esta información de la manera más eficiente en complejidad temporal?
     cout << "2. ¿Cuál es su IP? ¿Cómo determinarías esta información de la manera más eficiente en complejidad temporal?" << endl;
     string ipAnomala = encontrarAnomalos(computadoras); 
-    cout << "La IP es " << ipAnomala << endl;
+    cout << "\tLa IP es " << ipAnomala << endl;
     
-    cout << "Con una inspección visual identificamos: ds19smmrn47jp3osf6x4.com" << endl; 
-    cout << "Hicimos una función prototipo de cómo se podrían encontrar dominios anómalos: encontrarAnomalos(datos)" << endl; 
-    cout << "Para esto usamos como parámetros el largo del dominio y si contiene caracteres no alfanuméricos" << endl; 
-    cout << "Una implementación eficiente podría ser tener un algoritmo de machine learning, que vaya aprendiendo qué dominios son anómalos y los detecte en una complejidad O(1)" << endl;
+    cout << "\tCon una inspección visual identificamos: ds19smmrn47jp3osf6x4.com" << endl; 
+    cout << "\tHicimos una función prototipo de cómo se podrían encontrar dominios anómalos: encontrarAnomalos(datos)" << endl; 
+    cout << "\tPara esto usamos como parámetros el largo del dominio y si contiene caracteres no alfanuméricos" << endl; 
+    cout << "\tUna implementación eficiente podría ser tener un algoritmo de machine learning, que vaya aprendiendo qué dominios son anómalos y los detecte en una complejidad O(1)" << endl;
     
     //De las computadoras pertenecientes al dominio reto.com determina la cantidad de ips que tienen al menos una conexión entrante. 
     //(Recuerda que ya tienes la dirección de la red y el último octeto puede tener computadoras del .1 al .254). 
     //Imprime la cantidad de computadoras.
     cout << "3. De las computadoras pertenecientes al dominio reto.com determina la cantidad de ips que tienen al menos una conexión entrante." << endl; 
-    cout << computadorasConConexionesEntrantes(computadoras) << " computadoras de la red interna con al menos una conexion entrante" << endl;
+    cout << "\t" << computadorasConConexionesEntrantes(computadoras) << " computadoras de la red interna con al menos una conexion entrante" << endl;
 
     //Toma algunas computadoras que no sean server.reto.com o el servidor dhcp. Pueden ser entre 5 y 150. Obtén las ip únicas de las conexiones entrantes.
     cout << "4. Toma algunas computadoras que no sean server.reto.com o el servidor dhcp. Pueden ser entre 5 y 150. Obtén las ip únicas de las conexiones entrantes." << endl;
     set<string> conexiones = obtenerIPsEntrantes(computadoras);
     
     for (auto it = conexiones.begin(); it != conexiones.end(); ++it){
-        cout << ' ' << *it << endl;
+        cout << '\t' << *it << endl;
     }
     
     //Considerando el resultado de las preguntas 3 y 4, ¿Qué crees que esté ocurriendo en esta red? (Pregunta sin código)
     cout << "5. Considerando el resultado de las preguntas 3 y 4, ¿Qué crees que esté ocurriendo en esta red? (Pregunta sin código)"<<endl;
-    cout << "32 computadoras internas tienen conexiones entrantes. Esto significa que computadoras externas están intentando acceder a la información. "<<endl;
-    cout << "De las conexiones entrantes, puede identificarse que existe solo una conexión al dominio anómalo"<<endl;
+    cout << "\t32 computadoras internas tienen conexiones entrantes. Esto significa que computadoras externas están intentando acceder a la información. "<<endl;
+    cout << "\tDe las conexiones entrantes, puede identificarse que existe solo una conexión al dominio anómalo"<<endl;
 
     //Para las ips encontradas en el paso anterior, determina si se han comunicado con los datos encontrados en la pregunta 1.
     // Iterar conexiones entrantes de ip anomala;
@@ -198,17 +195,17 @@ int main(void){
     map<string, int> culpable;
     for (auto it = conexionesEntrantesAIPAnomala.begin(); it != conexionesEntrantesAIPAnomala.end(); ++it){
         culpable[ it->host ] ++;
-        // cout << ' ' << it->IP << "(" << it->host << ")" << endl;
     }
     for (auto it = culpable.begin(); it != culpable.end(); it++){
         cout << it->first << ": " << it->second << endl;
     }
 
-    // cout << *computadoras[ipAnomala]. << endl; 
-    
-    // (Extra):  En caso de que hayas encontrado que las computadoras del paso 1 y 4 se comunican, determina en qué fecha ocurre la primera comunicación entre estas 2 y qué protocolo se usó.
-    
-    // 
+    cout << "(Extra):  En caso de que hayas encontrado que las computadoras del paso 1 y 4 se comunican, determina en qué fecha ocurre la primera comunicación entre estas 2 y qué protocolo se usó."<<endl;
+    cout << "\tLa computadora de Jennifer se infectó el: "; 
+    conexionesEntrantesAIPAnomala.back().imprimirFecha();
+    cout << endl; 
+    cout << "\tPuerto: " << conexionesEntrantesAIPAnomala.back().puerto << endl;
+    cout << endl;
 
 
     return 0;

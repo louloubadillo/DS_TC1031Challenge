@@ -24,13 +24,13 @@ class ConexionesComputadora{
         std::list<Conexion> conexionesEntrantes; //leer de última a primera
         std::list<Conexion> conexionesSalientes; //leer de primera a última
 
-        void insertarEnConexionesEntrantes(std::string IP, int puerto, std::string host){
-            Conexion c(IP, puerto, host);
+        void insertarEnConexionesEntrantes(std::string IP, int puerto, std::string host, tm fecha){
+            Conexion c(IP, puerto, host, fecha);
             conexionesEntrantes.push_front(c);
         }
 
-        void insertarEnConexionesSalientes(std::string IP, int puerto, std::string host){
-            Conexion c(IP, puerto, host); 
+        void insertarEnConexionesSalientes(std::string IP, int puerto, std::string host, tm fecha){
+            Conexion c(IP, puerto, host, fecha); 
             conexionesSalientes.push_back(c);
         }
 
@@ -44,7 +44,8 @@ class ConexionesComputadora{
                     this->insertarEnConexionesEntrantes(
                         datos[i].fuente_ip, 
                         datos[i].fuente_puerto,
-                        datos[i].fuente_hostname
+                        datos[i].fuente_hostname,
+                        datos[i].fecha
                     );
                 } 
 
@@ -52,7 +53,8 @@ class ConexionesComputadora{
                     this->insertarEnConexionesSalientes(
                         datos[i].destino_ip, 
                         datos[i].destino_puerto,
-                        datos[i].destino_hostname
+                        datos[i].destino_hostname,
+                        datos[i].fecha
                     );
                 } 
             }
