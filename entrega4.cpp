@@ -151,6 +151,7 @@ map<string, int> conexionesPorDia(tm date, vector<Registro> datos){
             }
         }
     }
+    return conexiones; 
 }
 
 /*
