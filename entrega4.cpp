@@ -238,8 +238,8 @@ int main(void){
     // Utiliza estas funciones para imprimir por cada día de las bitácoras el top 5
     //Imprimir top 5 por día
     set<Date> todasLasFechas = obtenerFechas(datos);
-    BinarySearchTree tops; 
     for (set<Date>::iterator it = todasLasFechas.begin(); it != todasLasFechas.end(); ++it){
+        BinarySearchTree tops; 
         top(tops,5,it->date, datos); 
     }
 
@@ -247,8 +247,8 @@ int main(void){
     cout << "1. ¿Existe algún sitio que se mantenga en el top 5 en todos los días?" << endl;
     cout << "\t Sí, gmail.com se mantiene en el top 5 diario." << endl; 
     cout << "2. ¿Existe algún sitio que entre al top 5 a partir de un día y de ahí aparezca en todos los días subsecuentes?" << endl;
-    cout << "\t Sí, netflix.com, wikihow.com, groupon.com y ds19smmrn47jp3osf6x4.com " << endl; 
+    cout << "\t Sí, ds19smmrn47jp3osf6x4.com " << endl; 
     cout << "3. ¿Existe algún sitio que aparezca en el top 5 con una cantidad más alta de tráfico que lo normal?" << endl;
-    cout << "\t Sí, resalta ds19smmrn47jp3osf6x4.com con 340 entradas diarias desde el 17/8/2020" << endl; 
+    cout << "\t Sí, resalta ds19smmrn47jp3osf6x4.com con entradas diarias desde el 17/8/2020" << endl; 
     return 0;
 }
