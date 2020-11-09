@@ -150,7 +150,7 @@ set<string> obtenerIPsEntrantes(map<string, ConexionesComputadora> computadoras)
     /**
      * - for computadora in computadoras
      * -    si computadora.IP != server.reto.com
-     *          iterar por conexiones entrantes
+     *          iterar por numeroDeOcurrencias entrantes
      *              si conexionEntrante.puerto != 67
      *                  agregar IP al set (para que no se repita :))
      * regresar set
@@ -182,24 +182,24 @@ set<string> obtenerIPsEntrantes(map<string, ConexionesComputadora> computadoras)
 conexionesPorDia
 Recibe una fecha 
 Regresa un map<string, int>
-Conteniendo la cantidad de conexiones entrantes a cada sitio/página que no sea "-" 
+Conteniendo la cantidad de numeroDeOcurrencias entrantes a cada sitio/página que no sea "-" 
 y que no pertenezca al dominio "reto.com" del día especificado por la fecha de entrada. 
 */
 map<string, int> conexionesPorDia(tm date, vector<Registro> datos){
-    map<string, int> conexiones; 
+    map<string, int> numeroDeOcurrencias; 
     for (int i = 0; i < datos.size(); i++){
         if(datos[i].fecha.tm_mday == date.tm_mday && datos[i].fecha.tm_mon == date.tm_mon && datos[i].fecha.tm_year == date.tm_year){ 
             if(datos[i].destino_hostname.find(".reto.com") == string::npos && datos[i].destino_hostname.find("-")== string::npos){
-                conexiones[datos[i].destino_hostname]++; 
+                numeroDeOcurrencias[datos[i].destino_hostname]++; 
             }
         }
     }
-    return conexiones; 
+    return numeroDeOcurrencias; 
 }
 // Imprime un mapa
-void printMap(map<string, int> conexiones){
+void printMap(map<string, int> numeroDeOcurrencias){
     map<string, int>::iterator it;
-    for(it = conexiones.begin(); it != conexiones.end(); it++ ){
+    for(it = numeroDeOcurrencias.begin(); it != numeroDeOcurrencias.end(); it++ ){
         cout<< it->first <<":\t" << it->second <<endl;
     }
 }
@@ -208,16 +208,31 @@ void printMap(map<string, int> conexiones){
 Contenga una función llamada top, la cual recibe un parámetro n de tipo int 
 y una fecha. Esta función debe imprimir los n sitios con más accesos en esa fecha. 
 Para ello, puedes usar la función conexionesPorDia y debes agregar los sitios a un 
-BST utilizando como parámetro de ordenamiento la cantidad de conexiones entrantes.
+BST utilizando como parámetro de ordenamiento la cantidad de numeroDeOcurrencias entrantes.
 */
-void top(BinarySearchTree &tree, int n, tm date, vector<Registro> datos){
+void top(
+    BinarySearchTree &tree, int n, tm date, map<string, int> &numeroDeOcurrencias, map <string, int> &promedioDiario, vector<Registro> datos){
     map<string, int> conexionesDia = conexionesPorDia(date, datos); 
     map<string, int>::iterator it;
     for(it = conexionesDia.begin(); it != conexionesDia.end(); it++ ){
         tree.insertNode(it->first, it->second);
     }
-    cout << endl << "El top 5 del día " << date.tm_mday << "/" << date.tm_mon+1 << "/" << date.tm_year+1900 << " es:" << endl;
+    cout << endl << "El top " << n << " del día " << date.tm_mday << "/" << date.tm_mon+1 << "/" << date.tm_year+1900 << " es:" << endl;
     tree.printKth(n); 
+
+    map<string, int> conexionesTemp;
+    tree.saveKth(n, conexionesTemp);
+
+    for(map<string, int>::iterator i = conexionesTemp.begin(); i!=conexionesTemp.end(); ++i){
+        if(i->second > 1){ i->second = 1; }
+        i->second += numeroDeOcurrencias[i->first];
+    }
+    tree.saveKth(n, promedioDiario);
+    for(map<string, int>::iterator i = promedioDiario.begin(); i!=promedioDiario.end(); ++i){
+        i->second += conexionesTemp[i->first];        
+    }
+
+    numeroDeOcurrencias = conexionesTemp;
 }
 
 set<Date> obtenerFechas(vector<Registro> datos){
@@ -231,6 +246,8 @@ set<Date> obtenerFechas(vector<Registro> datos){
 
 
 
+
+
 int main(void){
     Reader r; 
     vector <Registro> datos = r.readFile(); 
@@ -238,17 +255,36 @@ int main(void){
     // Utiliza estas funciones para imprimir por cada día de las bitácoras el top 5
     //Imprimir top 5 por día
     set<Date> todasLasFechas = obtenerFechas(datos);
+    map<string, int> numeroDeOcurrencias;
+    map<string, int> promedioDiario;
     for (set<Date>::iterator it = todasLasFechas.begin(); it != todasLasFechas.end(); ++it){
         BinarySearchTree tops; 
-        top(tops,5,it->date, datos); 
+        top(tops,5,it->date, numeroDeOcurrencias, promedioDiario, datos); 
     }
 
-    cout << "" << endl; 
+    cout << "RESPUESTAS" << endl; 
     cout << "1. ¿Existe algún sitio que se mantenga en el top 5 en todos los días?" << endl;
-    cout << "\t Sí, gmail.com se mantiene en el top 5 diario." << endl; 
+    cout << "Se mantuvieron en el top 5 diario: " << endl; 
+    for(map<string, int>::iterator it = numeroDeOcurrencias.begin(); it != numeroDeOcurrencias.end(); ++it){
+        if(it->second == todasLasFechas.size()){
+            cout<<"\t"<<it->first<<"\t: "<<it->second<<endl;
+        }
+    }
+
     cout << "2. ¿Existe algún sitio que entre al top 5 a partir de un día y de ahí aparezca en todos los días subsecuentes?" << endl;
-    cout << "\t Sí, ds19smmrn47jp3osf6x4.com " << endl; 
+    cout << "Se mantuvieron en el top 5: " << endl;
+    for(map<string, int>::iterator it = numeroDeOcurrencias.begin(); it != numeroDeOcurrencias.end(); ++it){    
+        if(it->second > 1){
+            cout<<"\t"<<it->first<<"\t : se mantuvo "<<it->second<< " días"<<endl;
+        }
+    }
     cout << "3. ¿Existe algún sitio que aparezca en el top 5 con una cantidad más alta de tráfico que lo normal?" << endl;
-    cout << "\t Sí, resalta ds19smmrn47jp3osf6x4.com con entradas diarias desde el 17/8/2020" << endl; 
+    cout << "\t Los siguientes sitios tienen una cantidad de tráfico notable: " << endl; 
+    for(map<string, int>::iterator it = promedioDiario.begin(); it != promedioDiario.end(); ++it){    
+            if ((it->second)/todasLasFechas.size() > 100){
+                cout<<"\t"<<it->first<<"\t : "<<it->second<<endl;
+            }
+    }
+    
     return 0;
 }

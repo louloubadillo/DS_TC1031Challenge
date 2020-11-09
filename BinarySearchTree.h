@@ -192,6 +192,32 @@ class BinarySearchTree{
                 kthLargest(root, i); 
             }
         }
+
+        void saveKthLargestRec(BTreeNode *root, int n, int &visitedNodes, map<string, int> &mappy){ 
+            if (root == NULL || visitedNodes >= n) return; 
+            // Derecho
+            saveKthLargestRec(root->getRight(), n, visitedNodes, mappy); 
+            visitedNodes++; 
+            // Si es el enésimo 
+            if (visitedNodes == n) { 
+                mappy[ root->getValueName() ] += root->getValueNum();
+                return; 
+            }
+            // Izquierdo 
+            saveKthLargestRec(root->getLeft(), n, visitedNodes, mappy); 
+        } 
+        
+        void saveKthLargest(BTreeNode *root, int n, map<string, int> &mappy){ 
+            int visitedNodes = 0; 
+            saveKthLargestRec(root, n, visitedNodes, mappy); 
+        } 
+
+        void saveKth(int n, map<string, int> &mappy){
+            for(int i = 0; i <= n; i++){
+                saveKthLargest(root, i, mappy); 
+            }
+        }
+
 };
 
 #endif
