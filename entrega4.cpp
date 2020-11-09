@@ -279,7 +279,7 @@ int main(void){
         }
     }
     cout << "3. ¿Existe algún sitio que aparezca en el top 5 con una cantidad más alta de tráfico que lo normal?" << endl;
-    cout << "\t Los siguientes sitios tienen una cantidad de tráfico notable: " << endl; 
+    cout << "\tLos siguientes sitios tienen una cantidad de tráfico notable: " << endl; 
     for(map<string, int>::iterator it = promedioDiario.begin(); it != promedioDiario.end(); ++it){    
             if ((it->second)/todasLasFechas.size() > 100){
                 cout<<"\t"<<it->first<<"\t : "<<it->second<<endl;
