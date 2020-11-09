@@ -11,8 +11,51 @@
 #include "ConexionesComputadora.hpp"
 #include <set>
 #include <cwctype> 
+#include <ctime>
+#include <string>
+#include "BinarySearchTree.h"
 using namespace std;
 
+class Date{
+    public:
+        tm date;
+        Date( tm date ){
+            this->date = date;
+            // this->date.tm_mday = date.tm_mday;
+            // this->date.tm_mon = date.tm_mon; 
+            // this->date.tm_year = date.tm_year; 
+        }
+
+        friend bool operator == (Date d, Date dd){
+            return (
+                d.date.tm_mday == dd.date.tm_mday &&
+                d.date.tm_mon == dd.date.tm_mon &&
+                d.date.tm_year == dd.date.tm_year
+            );
+        }
+
+        friend bool operator != (Date d, Date dd){
+            return (
+                d.date.tm_mday != dd.date.tm_mday ||
+                d.date.tm_mon != dd.date.tm_mon ||
+                d.date.tm_year != dd.date.tm_year
+            );
+        }
+
+        friend bool operator < (Date d, Date dd){
+            return (
+                d.date.tm_mday < dd.date.tm_mday ||
+                d.date.tm_mon < dd.date.tm_mon ||
+                d.date.tm_year < dd.date.tm_year
+            );
+        }
+        
+
+        string toString(){
+            return to_string(this->date.tm_mday) + "/" + to_string(this->date.tm_mon+1) + "/" + to_string(this->date.tm_year+1990);
+        }
+
+};
 
 // Imprimir vectores
 void print_vector(vector<Registro> arr){
@@ -144,14 +187,21 @@ y que no pertenezca al dominio "reto.com" del día especificado por la fecha de 
 */
 map<string, int> conexionesPorDia(tm date, vector<Registro> datos){
     map<string, int> conexiones; 
-    for (int i = 0; i < datos.size(); i++ ){
-        if(datos[i].fecha.tm_mday == date.tm_mday && datos[i].fecha.tm_mon == date.tm_mon && datos[i].fecha.tm_year == date.tm_year ){
-            if(!datos[i].fuente_hostname.find(".reto.com") && !datos[i].fuente_hostname.find("-") ){
-                conexiones[datos[i].fuente_hostname]++; 
+    for (int i = 0; i < datos.size(); i++){
+        if(datos[i].fecha.tm_mday == date.tm_mday && datos[i].fecha.tm_mon == date.tm_mon && datos[i].fecha.tm_year == date.tm_year){ 
+            if(datos[i].destino_hostname.find(".reto.com") == string::npos && datos[i].destino_hostname.find("-")== string::npos){
+                conexiones[datos[i].destino_hostname]++; 
             }
         }
     }
     return conexiones; 
+}
+// Imprime un mapa
+void printMap(map<string, int> conexiones){
+    map<string, int>::iterator it;
+    for(it = conexiones.begin(); it != conexiones.end(); it++ ){
+        cout<< it->first <<":\t" << it->second <<endl;
+    }
 }
 
 /*
@@ -160,19 +210,45 @@ y una fecha. Esta función debe imprimir los n sitios con más accesos en esa fe
 Para ello, puedes usar la función conexionesPorDia y debes agregar los sitios a un 
 BST utilizando como parámetro de ordenamiento la cantidad de conexiones entrantes.
 */
-void top(int n, tm date){
-
+void top(BinarySearchTree &tree, int n, tm date, vector<Registro> datos){
+    map<string, int> conexionesDia = conexionesPorDia(date, datos); 
+    map<string, int>::iterator it;
+    for(it = conexionesDia.begin(); it != conexionesDia.end(); it++ ){
+        tree.insertNode(it->first, it->second);
+    }
+    cout << endl << "El top 5 del día " << date.tm_mday << "/" << date.tm_mon+1 << "/" << date.tm_year+1900 << " es:" << endl;
+    tree.printKth(n); 
 }
+
+set<Date> obtenerFechas(vector<Registro> datos){
+    set<Date> todasLasFechas;
+    for(int i = 0; i<datos.size(); i++){
+        Date d(datos[i].fecha);
+            todasLasFechas.insert( d );
+    }
+    return todasLasFechas;
+}
+
 
 
 int main(void){
     Reader r; 
     vector <Registro> datos = r.readFile(); 
     map<string, ConexionesComputadora> computadoras;
-    
-    cout << "1. ¿Existe algún sitio que se mantenga en el top 5 en todos los días?" << endl;
-    cout << "2. ¿Existe algún sitio que entre al top 5 a partir de un día y de ahí aparezca en todos los días subsecuentes?" << endl;
-    cout << "3. ¿Existe algún sitio que aparezca en el top 5 con una cantidad más alta de tráfico que lo normal?" << endl;
+    // Utiliza estas funciones para imprimir por cada día de las bitácoras el top 5
+    //Imprimir top 5 por día
+    set<Date> todasLasFechas = obtenerFechas(datos);
+    BinarySearchTree tops; 
+    for (set<Date>::iterator it = todasLasFechas.begin(); it != todasLasFechas.end(); ++it){
+        top(tops,5,it->date, datos); 
+    }
 
+    cout << "" << endl; 
+    cout << "1. ¿Existe algún sitio que se mantenga en el top 5 en todos los días?" << endl;
+    cout << "\t Sí, gmail.com se mantiene en el top 5 diario." << endl; 
+    cout << "2. ¿Existe algún sitio que entre al top 5 a partir de un día y de ahí aparezca en todos los días subsecuentes?" << endl;
+    cout << "\t Sí, netflix.com, wikihow.com, groupon.com y ds19smmrn47jp3osf6x4.com " << endl; 
+    cout << "3. ¿Existe algún sitio que aparezca en el top 5 con una cantidad más alta de tráfico que lo normal?" << endl;
+    cout << "\t Sí, resalta ds19smmrn47jp3osf6x4.com con 340 entradas diarias desde el 17/8/2020" << endl; 
     return 0;
 }
