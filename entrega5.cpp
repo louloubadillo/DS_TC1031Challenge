@@ -53,7 +53,7 @@ class Date{
         
 
         string toString(){
-            return to_string(this->date.tm_mday) + "/" + to_string(this->date.tm_mon+1) + "/" + to_string(this->date.tm_year+1990);
+            return to_string(this->date.tm_mday) + "/" + to_string(this->date.tm_mon+1) + "/" + to_string(this->date.tm_year+1900);
         }
 
 };
@@ -235,6 +235,70 @@ void llenarComputadoras(map<string, ConexionesComputadora> &computadoras, vector
     }
 }
 
+//Función 
+void conexionesDiariasEnGrafos( map<Date, Graph<string>> &grafosPorDia, set<Date> todasLasFechas, string IP_A, map<Date, int> &conexionesSalientesPorDia, map<string, ConexionesComputadora> todasLasComputadoras){
+     // Iterar por cada día y hacer grafo
+    for (set<Date>::iterator it = todasLasFechas.begin(); it != todasLasFechas.end(); ++it){
+        Graph<string> grafo_i;
+        // Iterar todas las computadoras para añadir nodos
+        for(map<string, ConexionesComputadora>::iterator itt = todasLasComputadoras.begin(); itt != todasLasComputadoras.end(); ++itt){
+            // Si es interna, añadir al grafo
+            if(esInterna(itt->first)){
+                grafo_i.add_node(itt->first);
+            }
+        }
+        // Iterar todas las computadoras para añadir edges
+        for(map<string, ConexionesComputadora>::iterator itt = todasLasComputadoras.begin(); itt != todasLasComputadoras.end(); ++itt){
+            string i_ip = itt->first;
+            list<Conexion> i_conexionesSalientes = itt->second.conexionesSalientes;
+            // Iterar todas las conexiones salientes
+            for(list<Conexion>::iterator ittt = i_conexionesSalientes.begin(); ittt != i_conexionesSalientes.end(); ++ittt){
+                // Si es interna, agregar conexion
+                if( esInterna(ittt->IP) ){
+                    grafo_i.add_edge_element(i_ip, ittt->IP);
+                    // Si destino  == IP_A, entonces guardar en map<Date, int>
+                    if(ittt->IP == IP_A){
+                        conexionesSalientesPorDia[*it]++;
+                    }
+                    
+                }
+            }
+        }
+        grafosPorDia[*it] = grafo_i;
+    }
+ }
+
+ //Obtener IP con más conexiones por día
+ map<Date, string> maxConexionesPorDia(map<Date, Graph<string>> grafosPorDia){
+    map<Date, string> maxConexionesPorDia; 
+    for(map<Date, Graph<string>>::iterator it = grafosPorDia.begin(); it != grafosPorDia.end(); ++it){
+        Graph<string> grafo_hoy = it->second;
+        
+        map<string, int> numeroDeConexiones = grafo_hoy.saveNeigbhors();
+        string ipConMasConexiones = "";
+        int maxConexiones = 0;
+        for(map<string, int>::iterator itt = numeroDeConexiones.begin(); itt != numeroDeConexiones.end(); ++itt){
+            if(itt->second >= maxConexiones){
+                ipConMasConexiones = itt->first;
+                maxConexiones = itt->second;
+            }
+        }
+        maxConexionesPorDia[it->first] = ipConMasConexiones;
+    }
+    return maxConexionesPorDia; 
+}
+
+bool esVerticeConMasConexionesSalientes(map<Date, string> maxConexionesPorDia, string ipA){
+    bool mayorConexionesSalientes; 
+    for(map<Date, string>::iterator it = maxConexionesPorDia.begin(); it != maxConexionesPorDia.end(); ++it){
+        if(it->second != ipA){
+            return false;
+        }
+    }
+    cout << "El vértice con la IP: " << ipA << " tiene la mayor cantidad de conexiones salientes hacia la red interna."<<endl;
+    return true;  
+}
+
 
 
 int main(void){
@@ -255,35 +319,21 @@ int main(void){
     string IP_TRAFICO_C = "64.158.210.175"; //Groupon que tuvo más de 400 visitas en un día
     ConexionesComputadora C = todasLasComputadoras[IP_TRAFICO_C];
 
+    /* 1. Utilizando un grafo con las conexiones entre las ip de la red interna, 
+    determina la cantidad de computadoras con las que se ha conectado A por día. 
+    ¿Es A el vértice que más conexiones salientes hacia la red interna tiene? */
     map<Date, Graph<string>> grafosPorDia;
     set<Date> todasLasFechas = obtenerFechas(datos);
-    // Iterar por cada día y hacer grafo
-    for (set<Date>::iterator it = todasLasFechas.begin(); it != todasLasFechas.end(); ++it){
-        Graph<string> grafo_i;
-        // Iterar todas las computadoras para añadir nodos
-        for(map<string, ConexionesComputadora>::iterator it = todasLasComputadoras.begin(); it != todasLasComputadoras.end(); ++it){
-            // Si es interna, añadir al grafo
-            if(esInterna(it->first)){
-                grafo_i.add_node(it->first);
-            }
-        }
-        // Iterar todas las computadoras para añadir edges
-        for(map<string, ConexionesComputadora>::iterator it = todasLasComputadoras.begin(); it != todasLasComputadoras.end(); ++it){
-            string i_ip = it->first;
-            list<Conexion> i_conexionesSalientes = it->second.conexionesSalientes;
-            // Iterar todas las conexiones salientes
-            for(list<Conexion>::iterator jt = i_conexionesSalientes.begin(); jt != i_conexionesSalientes.end(); ++jt){
-                // Si es interna, agregar conexion
-                if( esInterna(jt->IP) ){
-                    // cout<<i_ip<<"-->"<<jt->IP<<endl;
-                    grafo_i.add_edge_element(i_ip, jt->IP);
-                }
-            }
-        }
-        // Imprimir los datos del grafo 
-        // grafo_i.DFS(71);
-        grafo_i.printNeighbors();
-    }
+    map<Date, int> conexionesSalientesPorDia;
+
+    conexionesDiariasEnGrafos(grafosPorDia, todasLasFechas, IP_INTERNA_A, conexionesSalientesPorDia, todasLasComputadoras); 
+    
+    cout<<"1. Utilizando un grafo con las conexiones entre las ip de la red interna, determina la cantidad de computadoras con las que se ha conectado A por día. ¿Es A el vértice que más conexiones salientes hacia la red interna tiene?"<<endl;
+    map<Date, string> maxConexionesDia = maxConexionesPorDia(grafosPorDia); 
+    esVerticeConMasConexionesSalientes(maxConexionesDia, IP_INTERNA_A);
+    
+    /* 2. Utilizando el grafo del punto anterior, ubica la cantidad de computadoras que se han conectado hacia A por día.
+    ¿Existen conexiones de las demás computadoras hacia A? */
 
     
     return 0;

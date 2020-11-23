@@ -23,7 +23,9 @@ public:
     void set_val(T _val) {val = _val;};
 
     std::vector<int> get_adj() {return adj;};
-    void add_to_adj(int idx) {adj.push_back(idx);};
+    void add_to_adj(int idx) {
+        adj.push_back(idx);
+    };
 
     friend bool operator == (GraphVertex<T> d, GraphVertex<T> dd){
         return (d.get_val() == dd.get_val());
@@ -58,11 +60,12 @@ public:
         GraphVertex<T> src(s);
         GraphVertex<T> dst(d);
         auto it_src = std::find(nodes.begin(), nodes.end(), src);
-        auto it_dst = find(nodes.begin(), nodes.end(), dst);
+        auto it_dst = std::find(nodes.begin(), nodes.end(), dst);
         // Si existen
         if(it_src != nodes.end() && it_dst != nodes.end()){
             int i_src = it_src - nodes.begin();
             int i_dst = it_dst - nodes.begin();
+            add_edge(i_src, i_dst);
             // std::cout<<i_src<<"->"<<i_dst<<std::endl;
         } // Si no existen
         else {
@@ -72,8 +75,18 @@ public:
 
     void printNeighbors(){
         for(int i = 0; i < nodes.size(); i++){
-            std::cout<<i<<":\t"<<nodes[i].get_adj().size()<<std::endl;
+            if(nodes[i].get_adj().size() != 0){
+                std::cout<< nodes[i].get_val() <<":\t"<<nodes[i].get_adj().size()<<std::endl;
+            }
         }
+    }
+
+    map<T, int> saveNeigbhors(){
+        map<T, int> count;
+        for(int i = 0; i < nodes.size(); i++){
+            count[ nodes[i].get_val() ] = nodes[i].get_adj().size();
+        }
+        return count;
     }
 
     void BFS(int start_vertex)
