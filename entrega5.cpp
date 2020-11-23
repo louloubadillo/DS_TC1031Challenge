@@ -177,36 +177,6 @@ void printMap(map<string, int> numeroDeOcurrencias){
     }
 }
 
-/*
-Contenga una función llamada top, la cual recibe un parámetro n de tipo int 
-y una fecha. Esta función debe imprimir los n sitios con más accesos en esa fecha. 
-Para ello, puedes usar la función conexionesPorDia y debes agregar los sitios a un 
-BST utilizando como parámetro de ordenamiento la cantidad de numeroDeOcurrencias entrantes.
-*/
-void top(
-    BinarySearchTree &tree, int n, tm date, map<string, int> &numeroDeOcurrencias, map <string, int> &promedioDiario, vector<Registro> datos){
-    map<string, int> conexionesDia = conexionesPorDia(date, datos); 
-    map<string, int>::iterator it;
-    for(it = conexionesDia.begin(); it != conexionesDia.end(); it++ ){
-        tree.insertNode(it->first, it->second);
-    }
-    cout << endl << "El top " << n << " del día " << date.tm_mday << "/" << date.tm_mon+1 << "/" << date.tm_year+1900 << " es:" << endl;
-    tree.printKth(n); 
-
-    map<string, int> conexionesTemp;
-    tree.saveKth(n, conexionesTemp);
-
-    for(map<string, int>::iterator i = conexionesTemp.begin(); i!=conexionesTemp.end(); ++i){
-        if(i->second > 1){ i->second = 1; }
-        i->second += numeroDeOcurrencias[i->first];
-    }
-    tree.saveKth(n, promedioDiario);
-    for(map<string, int>::iterator i = promedioDiario.begin(); i!=promedioDiario.end(); ++i){
-        i->second += conexionesTemp[i->first];        
-    }
-
-    numeroDeOcurrencias = conexionesTemp;
-}
 
 set<Date> obtenerFechas(vector<Registro> datos){
     set<Date> todasLasFechas;
@@ -236,7 +206,7 @@ void llenarComputadoras(map<string, ConexionesComputadora> &computadoras, vector
 }
 
 //Función 
-void conexionesDiariasEnGrafos( map<Date, Graph<string>> &grafosPorDia, set<Date> todasLasFechas, string IP_A, map<Date, int> &conexionesSalientesPorDia, map<string, ConexionesComputadora> todasLasComputadoras){
+void conexionesDiariasEnGrafos( map<Date, Graph<string>> &grafosPorDia, set<Date> todasLasFechas, string IP_A, map<Date, int> &conexionesEntrantesPorDia, map<string, ConexionesComputadora> todasLasComputadoras){
      // Iterar por cada día y hacer grafo
     for (set<Date>::iterator it = todasLasFechas.begin(); it != todasLasFechas.end(); ++it){
         Graph<string> grafo_i;
@@ -258,7 +228,7 @@ void conexionesDiariasEnGrafos( map<Date, Graph<string>> &grafosPorDia, set<Date
                     grafo_i.add_edge_element(i_ip, ittt->IP);
                     // Si destino  == IP_A, entonces guardar en map<Date, int>
                     if(ittt->IP == IP_A){
-                        conexionesSalientesPorDia[*it]++;
+                        conexionesEntrantesPorDia[*it]++;
                     }
                     
                 }
@@ -300,6 +270,14 @@ bool esVerticeConMasConexionesSalientes(map<Date, string> maxConexionesPorDia, s
 }
 
 
+bool esWeb(Conexion c){
+    if(c.puerto == 443){
+        return true;
+    }
+    return false;
+}
+
+
 
 int main(void){
     Reader r; 
@@ -324,9 +302,9 @@ int main(void){
     ¿Es A el vértice que más conexiones salientes hacia la red interna tiene? */
     map<Date, Graph<string>> grafosPorDia;
     set<Date> todasLasFechas = obtenerFechas(datos);
-    map<Date, int> conexionesSalientesPorDia;
+    map<Date, int> conexionesEntrantesPorDia;
 
-    conexionesDiariasEnGrafos(grafosPorDia, todasLasFechas, IP_INTERNA_A, conexionesSalientesPorDia, todasLasComputadoras); 
+    conexionesDiariasEnGrafos(grafosPorDia, todasLasFechas, IP_INTERNA_A, conexionesEntrantesPorDia, todasLasComputadoras); 
     
     cout<<"1. Utilizando un grafo con las conexiones entre las ip de la red interna, determina la cantidad de computadoras con las que se ha conectado A por día. ¿Es A el vértice que más conexiones salientes hacia la red interna tiene?"<<endl;
     map<Date, string> maxConexionesDia = maxConexionesPorDia(grafosPorDia); 
@@ -334,7 +312,12 @@ int main(void){
     
     /* 2. Utilizando el grafo del punto anterior, ubica la cantidad de computadoras que se han conectado hacia A por día.
     ¿Existen conexiones de las demás computadoras hacia A? */
-
+    cout<<"2. Utilizando el grafo del punto anterior, ubica la cantidad de computadoras que se han conectado hacia A por día. ¿Existen conexiones de las demás computadoras hacia A?"<<endl;
+    for(map<Date, int>::iterator it = conexionesEntrantesPorDia.begin(); it != conexionesEntrantesPorDia.end(); ++it){
+        Date hoy = it->first;
+        cout<<hoy.toString()<<":\t"<<it->second<<endl;
+    }
+    cout << "Sí existen conexiones entrantes a la computadora con IP: " << IP_INTERNA_A << endl; 
     
     return 0;
 }
