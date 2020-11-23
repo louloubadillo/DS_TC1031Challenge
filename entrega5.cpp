@@ -205,7 +205,7 @@ void llenarComputadoras(map<string, ConexionesComputadora> &computadoras, vector
     }
 }
 
-//Función 
+
 void conexionesDiariasEnGrafos( map<Date, Graph<string>> &grafosPorDia, set<Date> todasLasFechas, string IP_A, map<Date, int> &conexionesEntrantesPorDia, map<string, ConexionesComputadora> todasLasComputadoras){
      // Iterar por cada día y hacer grafo
     for (set<Date>::iterator it = todasLasFechas.begin(); it != todasLasFechas.end(); ++it){
@@ -269,14 +269,38 @@ bool esVerticeConMasConexionesSalientes(map<Date, string> maxConexionesPorDia, s
     return true;  
 }
 
-
-bool esWeb(Conexion c){
+bool esWeb(Conexion c){ 
     if(c.puerto == 443){
         return true;
     }
     return false;
 }
 
+void conexionesWebEnGrafo(map<Date, Graph<string>> &grafosPorDiaWeb, set<Date> todasLasFechas, string IP_B, map<Date, int> &conexionesEntrantesPorDiaWeb, map<string, ConexionesComputadora> todasLasComputadoras){
+    for (set<Date>::iterator it = todasLasFechas.begin(); it != todasLasFechas.end(); ++it){
+        Graph<string> grafo_i;
+        // Iterar todas las computadoras para añadir nodos
+        for(map<string, ConexionesComputadora>::iterator itt = todasLasComputadoras.begin(); itt != todasLasComputadoras.end(); ++itt){
+            grafo_i.add_node(itt->first);
+        }
+        // Iterar todas las computadoras para añadir edges
+        for(map<string, ConexionesComputadora>::iterator itt = todasLasComputadoras.begin(); itt != todasLasComputadoras.end(); ++itt){
+            string i_ip = itt->first;
+            list<Conexion> i_conexionesSalientes = itt->second.conexionesSalientes;
+            // Iterar todas las conexiones salientes
+            // Si es web, agregar conexion
+            for(list<Conexion>::iterator ittt = i_conexionesSalientes.begin(); ittt != i_conexionesSalientes.end(); ++ittt){
+                if( esWeb(*ittt) ){
+                    grafo_i.add_edge_element(i_ip, ittt->IP);
+                    if(ittt->IP == IP_B){
+                        conexionesEntrantesPorDiaWeb[*it]++;
+                    }
+                }
+            }
+        }
+        grafosPorDiaWeb[*it] = grafo_i;
+    }
+}
 
 
 int main(void){
@@ -319,5 +343,15 @@ int main(void){
     }
     cout << "Sí existen conexiones entrantes a la computadora con IP: " << IP_INTERNA_A << endl; 
     
+   /* 3. Utilizando un grafo de conexiones a sitios web, determina cuántas computadoras se han 
+    conectado a B por día. */
+    map<Date, Graph<string>> grafosPorDiaWeb;
+    map<Date, int> conexionesEntrantesPorDiaWeb;
+    conexionesWebEnGrafo(grafosPorDiaWeb, todasLasFechas, IP_ANOMALA_B, conexionesEntrantesPorDiaWeb, todasLasComputadoras); 
+    cout << "3. Utilizando un grafo de conexiones a sitios web, determina cuántas computadoras se han conectado a B por día." << endl; 
+    for(map<Date, int>::iterator it = conexionesEntrantesPorDiaWeb.begin(); it != conexionesEntrantesPorDiaWeb.end(); ++it){
+        Date hoy = it->first;
+        cout<<hoy.toString()<<":\t"<<it->second<<endl;
+    }
     return 0;
 }
