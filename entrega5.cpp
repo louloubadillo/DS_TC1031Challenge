@@ -206,7 +206,7 @@ void llenarComputadoras(map<string, ConexionesComputadora> &computadoras, vector
 }
 
 
-void conexionesDiariasEnGrafos( map<Date, Graph<string>> &grafosPorDia, set<Date> todasLasFechas, string IP_A, map<Date, int> &conexionesEntrantesPorDia, map<string, ConexionesComputadora> todasLasComputadoras){
+void conexionesDiariasEnGrafos( map<Date, Graph<string>> &grafosPorDia, set<Date> todasLasFechas, string IP_A, map<Date, int> &conexionesEntrantesPorDia,  map<Date, int> &conexionesSalientesPorDia, map<string, ConexionesComputadora> todasLasComputadoras){
     // Iterar por cada día y hacer grafo
     for (set<Date>::iterator hoy = todasLasFechas.begin(); hoy != todasLasFechas.end(); ++hoy){
         Graph<string> grafo_i;
@@ -230,7 +230,9 @@ void conexionesDiariasEnGrafos( map<Date, Graph<string>> &grafosPorDia, set<Date
                     if(conexion->IP == IP_A){
                         conexionesEntrantesPorDia[*hoy]++;
                     }
-                    
+                    if(i_ip == IP_A){
+                        conexionesSalientesPorDia[*hoy]++;
+                    }
                 }
             }
         }
@@ -326,10 +328,15 @@ int main(void){
     map<Date, Graph<string>> grafosPorDia;
     set<Date> todasLasFechas = obtenerFechas(datos);
     map<Date, int> conexionesEntrantesPorDia;
-
-    conexionesDiariasEnGrafos(grafosPorDia, todasLasFechas, IP_INTERNA_A, conexionesEntrantesPorDia, todasLasComputadoras); 
+    map<Date, int> conexionesSalientesPorDia;
+    conexionesDiariasEnGrafos(grafosPorDia, todasLasFechas, IP_INTERNA_A, conexionesEntrantesPorDia, conexionesSalientesPorDia, todasLasComputadoras); 
     
-    cout<<"1. Utilizando un grafo con las conexiones entre las ip de la red interna, determina la cantidad de computadoras con las que se ha conectado A por día. ¿Es A el vértice que más conexiones salientes hacia la red interna tiene?"<<endl;
+    cout<<"1. Utilizando un grafo con las conexiones entre las ip de la red interna, determina la cantidad de computadoras con las que se ha conectado A por día."<<endl;
+    for(map<Date, int>::iterator it = conexionesSalientesPorDia.begin(); it != conexionesSalientesPorDia.end(); ++it){
+        Date hoy = it->first;
+        cout<<hoy.toString()<<":\t"<<it->second<<endl;
+    }
+    cout << "¿Es A el vértice que más conexiones salientes hacia la red interna tiene?" << endl; 
     map<Date, string> maxConexionesDia = maxConexionesPorDia(grafosPorDia); 
     esVerticeConMasConexionesSalientes(maxConexionesDia, IP_INTERNA_A);
     
